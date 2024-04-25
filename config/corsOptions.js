@@ -1,5 +1,6 @@
 const allowedOrigins = require("./allowedOrigins");
 
+// Remove for deployment because postman can access the api
 const corsOptions = {
     origin: (origin, callback) => {
         if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
