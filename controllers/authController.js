@@ -1,12 +1,11 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const asyncHandler = require("express-async-handler");
 
 // @desc Login
 // @route POST /auth
 // @access Public
-const login = asyncHandler(async (req, res) => {
+const login = async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -31,13 +30,13 @@ const login = asyncHandler(async (req, res) => {
             },
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "10m" }
+        { expiresIn: "15m" }
     );
 
     const refreshToken = jwt.sign(
         { username: foundUser.username },
         process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: "1d" }
+        { expiresIn: "7d" }
     );
 
     // Create secure cookie with refresh token
@@ -50,7 +49,7 @@ const login = asyncHandler(async (req, res) => {
 
     // Send accessToken containing username & roles
     res.json({ accessToken });
-});
+};
 
 // @desc Refresh
 // @route GET /auth/refresh
@@ -65,7 +64,7 @@ const refresh = (req, res) => {
     jwt.verify(
         refreshToken,
         process.env.REFRESH_TOKEN_SECRET,
-        asyncHandler(async (err, decoded) => {
+        async (err, decoded) => {
             if (err) {
                 return res.status(403).json({ message: "Forbidden" });
             }
@@ -84,11 +83,11 @@ const refresh = (req, res) => {
                     },
                 },
                 process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: "10m" }
+                { expiresIn: "15m" }
             );
 
             res.json({ accessToken });
-        })
+        }
     );
 };
 
