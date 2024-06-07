@@ -5,6 +5,13 @@ const bcrypt = require("bcrypt");
 // @desc Get all users
 // @route GET /users
 // @access Private
+
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+const validateEmail = (email) => {
+    return EMAIL_REGEX.test(email);
+};
+
 const getAllUsers = async (req, res) => {
     const users = await User.find().select("-password").lean();
     if (!users?.length) {
@@ -17,8 +24,12 @@ const getAllUsers = async (req, res) => {
 // @route POST /users
 // @access Private
 const createNewUser = async (req, res) => {
-    const { username, password, roles } = req.body;
+    const { username, password, roles, firstName, lastName, email } = req.body;
 
+    // Check email
+    if (!validateEmail(email)) {
+        return res.status(400).json({ message: "Valid email required" });
+    }
     // Confirm data
     if (!username || !password) {
         return res.status(400).json({ message: "All fields are required" });
@@ -39,7 +50,14 @@ const createNewUser = async (req, res) => {
     const userObject =
         !Array.isArray(roles) || !roles.length
             ? { username, password: hashedPwd }
-            : { username, password: hashedPwd, roles };
+            : {
+                  username,
+                  password: hashedPwd,
+                  roles,
+                  firstName,
+                  lastName,
+                  email,
+              };
 
     // Create & Store new user
     const user = await User.create(userObject);
@@ -56,7 +74,16 @@ const createNewUser = async (req, res) => {
 // @route PATCH /users
 // @access Private
 const updateUser = async (req, res) => {
-    const { id, username, roles, active, password } = req.body;
+    const {
+        id,
+        username,
+        roles,
+        active,
+        password,
+        firstName,
+        lastName,
+        email,
+    } = req.body;
 
     // Confirm data
     if (
@@ -67,6 +94,11 @@ const updateUser = async (req, res) => {
         typeof active !== "boolean"
     ) {
         return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Check email
+    if (!validateEmail(email)) {
+        return res.status(400).json({ message: "Valid email required" });
     }
 
     const user = await User.findById(id).exec();
@@ -89,6 +121,9 @@ const updateUser = async (req, res) => {
     user.username = username;
     user.roles = roles;
     user.active = active;
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.email = email;
 
     if (password) {
         // Hash password
