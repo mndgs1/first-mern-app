@@ -23,9 +23,9 @@ const getAllNotes = async (req, res) => {
 };
 
 const createNewNote = async (req, res) => {
-    const { user, title, text } = req.body;
+    const { user, title, text, client } = req.body;
 
-    if (!user || !title || !text) {
+    if (!user || !title || !text || !client) {
         return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -40,7 +40,7 @@ const createNewNote = async (req, res) => {
     }
 
     // Create and store the new user
-    const note = await Note.create({ user, title, text });
+    const note = await Note.create({ user, title, text, client });
 
     if (note) {
         res.status(201).json({ message: `New note ${title} created` });
@@ -50,10 +50,17 @@ const createNewNote = async (req, res) => {
 };
 
 const updateNote = async (req, res) => {
-    const { id, user, title, text, completed } = req.body;
+    const { id, user, title, text, client, completed } = req.body;
 
     // Confirm data
-    if (!id || !user || !title || !text || typeof completed !== "boolean") {
+    if (
+        !id ||
+        !user ||
+        !title ||
+        !text ||
+        !client ||
+        typeof completed !== "boolean"
+    ) {
         return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -78,6 +85,7 @@ const updateNote = async (req, res) => {
     note.title = title;
     note.text = text;
     note.completed = completed;
+    note.client = client;
 
     const updatedNote = await note.save();
 
